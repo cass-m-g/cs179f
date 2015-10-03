@@ -46,7 +46,7 @@
 #include "log.h"
 
 // Report errors to logfile and give -errno to caller
-static int bb_error(char *str);
+static int my_error(char *str);
 
 // Check whether the given user is permitted to perform the given operation on the given 
 
@@ -55,7 +55,7 @@ static int bb_error(char *str);
 //  have the mountpoint.  I'll save it away early on in main(), and then
 //  whenever I need a path for something I'll call this to construct
 //  it.
-static void bb_fullpath(char fpath[PATH_MAX], const char *path);
+static void my_fullpath(char fpath[PATH_MAX], const char *path);
 
 ///////////////////////////////////////////////////////////
 //
@@ -68,7 +68,7 @@ static void bb_fullpath(char fpath[PATH_MAX], const char *path);
  * ignored.  The 'st_ino' field is ignored except if the 'use_ino'
  * mount option is given.
  */
-int bb_getattr(const char *path, struct stat *statbuf);
+int my_getattr(const char *path, struct stat *statbuf);
 
 /** Read the target of a symbolic link
  *
@@ -80,9 +80,9 @@ int bb_getattr(const char *path, struct stat *statbuf);
  */
 // Note the system readlink() will truncate and lose the terminating
 // null.  So, the size passed to to the system readlink() must be one
-// less than the size passed to bb_readlink()
-// bb_readlink() code by Bernardo F Costa (thanks!)
-int bb_readlink(const char *path, char *link, size_t size);
+// less than the size passed to my_readlink()
+// my_readlink() code by Bernardo F Costa (thanks!)
+int my_readlink(const char *path, char *link, size_t size);
 
 /** Create a file node
  *
@@ -90,43 +90,43 @@ int bb_readlink(const char *path, char *link, size_t size);
  * creation of all non-directory, non-symlink nodes.
  */
 // shouldn't that comment be "if" there is no.... ?
-int bb_mknod(const char *path, mode_t mode, dev_t dev);
+int my_mknod(const char *path, mode_t mode, dev_t dev);
 
 /** Create a directory */
-int bb_mkdir(const char *path, mode_t mode);
+int my_mkdir(const char *path, mode_t mode);
 
 /** Remove a file */
-int bb_unlink(const char *path);
+int my_unlink(const char *path);
 
 /** Remove a directory */
-int bb_rmdir(const char *path);
+int my_rmdir(const char *path);
 
 /** Create a symbolic link */
 // The parameters here are a little bit confusing, but do correspond
 // to the symlink() system call.  The 'path' is where the link points,
 // while the 'link' is the link itself.  So we need to leave the path
 // unaltered, but insert the link into the mounted directory.
-int bb_symlink(const char *path, const char *link);
+int my_symlink(const char *path, const char *link);
 
 /** Rename a file */
 // both path and newpath are fs-relative
-int bb_rename(const char *path, const char *newpath);
+int my_rename(const char *path, const char *newpath);
 
 /** Create a hard link to a file */
-int bb_link(const char *path, const char *newpath);
+int my_link(const char *path, const char *newpath);
 
 /** Change the permission bits of a file */
-int bb_chmod(const char *path, mode_t mode);
+int my_chmod(const char *path, mode_t mode);
 
 /** Change the owner and group of a file */
-int bb_chown(const char *path, uid_t uid, gid_t gid);
+int my_chown(const char *path, uid_t uid, gid_t gid);
 
 /** Change the size of a file */
-int bb_truncate(const char *path, off_t newsize);
+int my_truncate(const char *path, off_t newsize);
 
 /** Change the access and/or modification times of a file */
 /* note -- I'll want to change this as soon as 2.6 is in debian testing */
-int bb_utime(const char *path, struct utimbuf *ubuf);
+int my_utime(const char *path, struct utimbuf *ubuf);
 
 /** File open operation
  *
@@ -138,7 +138,7 @@ int bb_utime(const char *path, struct utimbuf *ubuf);
  *
  * Changed in version 2.2
  */
-int bb_open(const char *path, struct fuse_file_info *fi);
+int my_open(const char *path, struct fuse_file_info *fi);
 
 /** Read data from an open file
  *
@@ -156,7 +156,7 @@ int bb_open(const char *path, struct fuse_file_info *fi);
 // can return with anything up to the amount of data requested. nor
 // with the fusexmp code which returns the amount of data also
 // returned by read.
-int bb_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
+int my_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
 
 /** Write data to an open file
  *
@@ -168,7 +168,7 @@ int bb_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_
  */
 // As  with read(), the documentation above is inconsistent with the
 // documentation for the write() system call.
-int bb_write(const char *path, const char *buf, size_t size, off_t offset,
+int my_write(const char *path, const char *buf, size_t size, off_t offset,
 	     struct fuse_file_info *fi);
 
 /** Get file system statistics
@@ -178,7 +178,7 @@ int bb_write(const char *path, const char *buf, size_t size, off_t offset,
  * Replaced 'struct statfs' parameter with 'struct statvfs' in
  * version 2.5
  */
-int bb_statfs(const char *path, struct statvfs *statv);
+int my_statfs(const char *path, struct statvfs *statv);
 
 /** Possibly flush cached data
  *
@@ -203,7 +203,7 @@ int bb_statfs(const char *path, struct statvfs *statv);
  *
  * Changed in version 2.2
  */
-int bb_flush(const char *path, struct fuse_file_info *fi);
+int my_flush(const char *path, struct fuse_file_info *fi);
 
 /** Release an open file
  *
@@ -219,7 +219,7 @@ int bb_flush(const char *path, struct fuse_file_info *fi);
  *
  * Changed in version 2.2
  */
-int bb_release(const char *path, struct fuse_file_info *fi);
+int my_release(const char *path, struct fuse_file_info *fi);
 
 /** Synchronize file contents
  *
@@ -228,20 +228,20 @@ int bb_release(const char *path, struct fuse_file_info *fi);
  *
  * Changed in version 2.2
  */
-int bb_fsync(const char *path, int datasync, struct fuse_file_info *fi);
+int my_fsync(const char *path, int datasync, struct fuse_file_info *fi);
 
 #ifdef HAVE_SYS_XATTR_H
 /** Set extended attributes */
-int bb_setxattr(const char *path, const char *name, const char *value, size_t size, int flags);
+int my_setxattr(const char *path, const char *name, const char *value, size_t size, int flags);
 
 /** Get extended attributes */
-int bb_getxattr(const char *path, const char *name, char *value, size_t size);
+int my_getxattr(const char *path, const char *name, char *value, size_t size);
 
 /** List extended attributes */
-int bb_listxattr(const char *path, char *list, size_t size);
+int my_listxattr(const char *path, char *list, size_t size);
 
 /** Remove extended attributes */
-int bb_removexattr(const char *path, const char *name);
+int my_removexattr(const char *path, const char *name);
 #endif
 
 /** Open directory
@@ -251,7 +251,7 @@ int bb_removexattr(const char *path, const char *name);
  *
  * Introduced in version 2.3
  */
-int bb_opendir(const char *path, struct fuse_file_info *fi);
+int my_opendir(const char *path, struct fuse_file_info *fi);
 
 /** Read directory
  *
@@ -274,14 +274,14 @@ int bb_opendir(const char *path, struct fuse_file_info *fi);
  *
  * Introduced in version 2.3
  */
-int bb_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset,
+int my_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset,
 	       struct fuse_file_info *fi);
 
 /** Release directory
  *
  * Introduced in version 2.3
  */
-int bb_releasedir(const char *path, struct fuse_file_info *fi);
+int my_releasedir(const char *path, struct fuse_file_info *fi);
 
 /** Synchronize directory contents
  *
@@ -292,7 +292,7 @@ int bb_releasedir(const char *path, struct fuse_file_info *fi);
  */
 // when exactly is this called?  when a user calls fsync and it
 // happens to be a directory? ???
-int bb_fsyncdir(const char *path, int datasync, struct fuse_file_info *fi);
+int my_fsyncdir(const char *path, int datasync, struct fuse_file_info *fi);
 
 /**
  * Initialize filesystem
@@ -311,7 +311,7 @@ int bb_fsyncdir(const char *path, int datasync, struct fuse_file_info *fi);
 // parameter coming in here, or else the fact should be documented
 // (and this might as well return void, as it did in older versions of
 // FUSE).
-void *bb_init(struct fuse_conn_info *conn);
+void *my_init(struct fuse_conn_info *conn);
 
 /**
  * Clean up filesystem
@@ -320,7 +320,7 @@ void *bb_init(struct fuse_conn_info *conn);
  *
  * Introduced in version 2.3
  */
-void bb_destroy(void *userdata);
+void my_destroy(void *userdata);
 
 /**
  * Check file access permissions
@@ -333,7 +333,7 @@ void bb_destroy(void *userdata);
  *
  * Introduced in version 2.5
  */
-int bb_access(const char *path, int mask);
+int my_access(const char *path, int mask);
 
 /**
  * Create and open a file
@@ -347,7 +347,7 @@ int bb_access(const char *path, int mask);
  *
  * Introduced in version 2.5
  */
-int bb_create(const char *path, mode_t mode, struct fuse_file_info *fi);
+int my_create(const char *path, mode_t mode, struct fuse_file_info *fi);
 
 /**
  * Change the size of an open file
@@ -361,7 +361,7 @@ int bb_create(const char *path, mode_t mode, struct fuse_file_info *fi);
  *
  * Introduced in version 2.5
  */
-int bb_ftruncate(const char *path, off_t offset, struct fuse_file_info *fi);
+int my_ftruncate(const char *path, off_t offset, struct fuse_file_info *fi);
 
 /**
  * Get attributes from an open file
@@ -375,58 +375,58 @@ int bb_ftruncate(const char *path, off_t offset, struct fuse_file_info *fi);
  *
  * Introduced in version 2.5
  */
-int bb_fgetattr(const char *path, struct stat *statbuf, struct fuse_file_info *fi);
+int my_fgetattr(const char *path, struct stat *statbuf, struct fuse_file_info *fi);
 
-struct fuse_operations bb_oper = {
-  .getattr = bb_getattr,
-  .readlink = bb_readlink,
+struct fuse_operations my_oper = {
+  .getattr = my_getattr,
+  .readlink = my_readlink,
   // no .getdir -- that's deprecated
   .getdir = NULL,
-  .mknod = bb_mknod,
-  .mkdir = bb_mkdir,
-  .unlink = bb_unlink,
-  .rmdir = bb_rmdir,
-  .symlink = bb_symlink,
-  .rename = bb_rename,
-  .link = bb_link,
-  .chmod = bb_chmod,
-  .chown = bb_chown,
-  .truncate = bb_truncate,
-  .utime = bb_utime,
-  .open = bb_open,
-  .read = bb_read,
-  .write = bb_write,
+  .mknod = my_mknod,
+  .mkdir = my_mkdir,
+  .unlink = my_unlink,
+  .rmdir = my_rmdir,
+  .symlink = my_symlink,
+  .rename = my_rename,
+  .link = my_link,
+  .chmod = my_chmod,
+  .chown = my_chown,
+  .truncate = my_truncate,
+  .utime = my_utime,
+  .open = my_open,
+  .read = my_read,
+  .write = my_write,
   /** Just a placeholder, don't set */ // huh???
-  .statfs = bb_statfs,
-  .flush = bb_flush,
-  .release = bb_release,
-  .fsync = bb_fsync,
+  .statfs = my_statfs,
+  .flush = my_flush,
+  .release = my_release,
+  .fsync = my_fsync,
   
 #ifdef HAVE_SYS_XATTR_H
-  .setxattr = bb_setxattr,
-  .getxattr = bb_getxattr,
-  .listxattr = bb_listxattr,
-  .removexattr = bb_removexattr,
+  .setxattr = my_setxattr,
+  .getxattr = my_getxattr,
+  .listxattr = my_listxattr,
+  .removexattr = my_removexattr,
 #endif
   
-  .opendir = bb_opendir,
-  .readdir = bb_readdir,
-  .releasedir = bb_releasedir,
-  .fsyncdir = bb_fsyncdir,
-  .init = bb_init,
-  .destroy = bb_destroy,
-  .access = bb_access,
-  .create = bb_create,
-  .ftruncate = bb_ftruncate,
-  .fgetattr = bb_fgetattr
+  .opendir = my_opendir,
+  .readdir = my_readdir,
+  .releasedir = my_releasedir,
+  .fsyncdir = my_fsyncdir,
+  .init = my_init,
+  .destroy = my_destroy,
+  .access = my_access,
+  .create = my_create,
+  .ftruncate = my_ftruncate,
+  .fgetattr = my_fgetattr
 };
 
-void bb_usage();
+void my_usage();
 
 int main(int argc, char *argv[])
 {
     int fuse_stat;
-    struct bb_state *bb_data;
+    //struct my_state *my_data;
 
     // bbfs doesn't do any access checking on its own (the comment
     // blocks in fuse.h mention some of the functions that need
@@ -448,27 +448,28 @@ int main(int argc, char *argv[])
     // rootpoint or mountpoint whose name starts with a hyphen, but so
     // will a zillion other programs)
     if ((argc < 3) || (argv[argc-2][0] == '-') || (argv[argc-1][0] == '-'))
-	bb_usage();
+	my_usage();
 
-    bb_data = malloc(sizeof(struct bb_state));
-    if (bb_data == NULL) {
+    my_data = malloc(sizeof(struct my_state));
+    if (my_data == NULL) {
 	perror("main calloc");
 	abort();
     }
 
     // Pull the rootdir out of the argument list and save it in my
     // internal data
-    bb_data->rootdir = realpath(argv[argc-2], NULL);
+    my_data->rootdir = realpath(argv[argc-2], NULL);
     argv[argc-2] = argv[argc-1];
     argv[argc-1] = NULL;
     argc--;
     
-    bb_data->logfile = log_open();
+    my_data->logfile = log_open();
     
     // turn over control to fuse
     fprintf(stderr, "about to call fuse_main\n");
-    fuse_stat = fuse_main(argc, argv, &bb_oper, bb_data);
+    fuse_stat = fuse_main(argc, argv, &my_oper, my_data);
     fprintf(stderr, "fuse_main returned %d\n", fuse_stat);
     
     return fuse_stat;
 }
+
