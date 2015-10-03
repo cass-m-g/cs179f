@@ -1,7 +1,7 @@
-### cs179f
+# cs179f
 
 
-# Contributors:
+### Contributors:
 
 | Name | Phone | Email |
 | ---- | ----- | ----- |
