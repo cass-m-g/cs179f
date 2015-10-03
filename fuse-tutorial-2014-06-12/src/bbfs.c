@@ -19,9 +19,9 @@
   filesystem semantics on top of any other existing structure.  It
   simply reports the requests that come in, and passes them to an
   underlying filesystem.  The information is saved in a logfile named
-  myfs.log, in the directory from which you run myfs.
+  bbfs.log, in the directory from which you run bbfs.
 
-  gcc -Wall `pkg-config fuse --cflags --libs` -o myfs myfs.c
+  gcc -Wall `pkg-config fuse --cflags --libs` -o bbfs bbfs.c
 */
 
 #include "params.h"
@@ -46,9 +46,7 @@
 #include "log.h"
 
 // Report errors to logfile and give -errno to caller
-static int my_error(char *str)
-{
-}
+static int my_error(char *str);
 
 // Check whether the given user is permitted to perform the given operation on the given 
 
@@ -57,9 +55,7 @@ static int my_error(char *str)
 //  have the mountpoint.  I'll save it away early on in main(), and then
 //  whenever I need a path for something I'll call this to construct
 //  it.
-static void my_fullpath(char fpath[PATH_MAX], const char *path)
-{
-}
+static void my_fullpath(char fpath[PATH_MAX], const char *path);
 
 ///////////////////////////////////////////////////////////
 //
@@ -72,9 +68,7 @@ static void my_fullpath(char fpath[PATH_MAX], const char *path)
  * ignored.  The 'st_ino' field is ignored except if the 'use_ino'
  * mount option is given.
  */
-int my_getattr(const char *path, struct stat *statbuf)
-{
-}
+int my_getattr(const char *path, struct stat *statbuf);
 
 /** Read the target of a symbolic link
  *
@@ -88,9 +82,7 @@ int my_getattr(const char *path, struct stat *statbuf)
 // null.  So, the size passed to to the system readlink() must be one
 // less than the size passed to my_readlink()
 // my_readlink() code by Bernardo F Costa (thanks!)
-int my_readlink(const char *path, char *link, size_t size)
-{
-}
+int my_readlink(const char *path, char *link, size_t size);
 
 /** Create a file node
  *
@@ -98,65 +90,43 @@ int my_readlink(const char *path, char *link, size_t size)
  * creation of all non-directory, non-symlink nodes.
  */
 // shouldn't that comment be "if" there is no.... ?
-int my_mknod(const char *path, mode_t mode, dev_t dev)
-{
-}
+int my_mknod(const char *path, mode_t mode, dev_t dev);
 
 /** Create a directory */
-int my_mkdir(const char *path, mode_t mode)
-{
-}
+int my_mkdir(const char *path, mode_t mode);
 
 /** Remove a file */
-int my_unlink(const char *path)
-{
-}
+int my_unlink(const char *path);
 
 /** Remove a directory */
-int my_rmdir(const char *path)
-{
-}
+int my_rmdir(const char *path);
 
 /** Create a symbolic link */
 // The parameters here are a little bit confusing, but do correspond
 // to the symlink() system call.  The 'path' is where the link points,
 // while the 'link' is the link itself.  So we need to leave the path
 // unaltered, but insert the link into the mounted directory.
-int my_symlink(const char *path, const char *link)
-{
-}
+int my_symlink(const char *path, const char *link);
 
 /** Rename a file */
 // both path and newpath are fs-relative
-int my_rename(const char *path, const char *newpath)
-{
-}
+int my_rename(const char *path, const char *newpath);
 
 /** Create a hard link to a file */
-int my_link(const char *path, const char *newpath)
-{
-}
+int my_link(const char *path, const char *newpath);
 
 /** Change the permission bits of a file */
-int my_chmod(const char *path, mode_t mode)
-{
-}
+int my_chmod(const char *path, mode_t mode);
 
 /** Change the owner and group of a file */
-int my_chown(const char *path, uid_t uid, gid_t gid)
-{
-}
+int my_chown(const char *path, uid_t uid, gid_t gid);
 
 /** Change the size of a file */
-int my_truncate(const char *path, off_t newsize)
-{
-}
+int my_truncate(const char *path, off_t newsize);
 
 /** Change the access and/or modification times of a file */
 /* note -- I'll want to change this as soon as 2.6 is in debian testing */
-int my_utime(const char *path, struct utimbuf *ubuf)
-{
-}
+int my_utime(const char *path, struct utimbuf *ubuf);
 
 /** File open operation
  *
@@ -168,9 +138,7 @@ int my_utime(const char *path, struct utimbuf *ubuf)
  *
  * Changed in version 2.2
  */
-int my_open(const char *path, struct fuse_file_info *fi)
-{
-}
+int my_open(const char *path, struct fuse_file_info *fi);
 
 /** Read data from an open file
  *
@@ -188,9 +156,7 @@ int my_open(const char *path, struct fuse_file_info *fi)
 // can return with anything up to the amount of data requested. nor
 // with the fusexmp code which returns the amount of data also
 // returned by read.
-int my_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
-{
-}
+int my_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
 
 /** Write data to an open file
  *
@@ -203,9 +169,7 @@ int my_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_
 // As  with read(), the documentation above is inconsistent with the
 // documentation for the write() system call.
 int my_write(const char *path, const char *buf, size_t size, off_t offset,
-	     struct fuse_file_info *fi)
-{
-}
+	     struct fuse_file_info *fi);
 
 /** Get file system statistics
  *
@@ -214,9 +178,7 @@ int my_write(const char *path, const char *buf, size_t size, off_t offset,
  * Replaced 'struct statfs' parameter with 'struct statvfs' in
  * version 2.5
  */
-int my_statfs(const char *path, struct statvfs *statv)
-{
-}
+int my_statfs(const char *path, struct statvfs *statv);
 
 /** Possibly flush cached data
  *
@@ -241,9 +203,7 @@ int my_statfs(const char *path, struct statvfs *statv)
  *
  * Changed in version 2.2
  */
-int my_flush(const char *path, struct fuse_file_info *fi)
-{
-}
+int my_flush(const char *path, struct fuse_file_info *fi);
 
 /** Release an open file
  *
@@ -259,9 +219,7 @@ int my_flush(const char *path, struct fuse_file_info *fi)
  *
  * Changed in version 2.2
  */
-int my_release(const char *path, struct fuse_file_info *fi)
-{
-}
+int my_release(const char *path, struct fuse_file_info *fi);
 
 /** Synchronize file contents
  *
@@ -270,30 +228,20 @@ int my_release(const char *path, struct fuse_file_info *fi)
  *
  * Changed in version 2.2
  */
-int my_fsync(const char *path, int datasync, struct fuse_file_info *fi)
-{
-}
+int my_fsync(const char *path, int datasync, struct fuse_file_info *fi);
 
 #ifdef HAVE_SYS_XATTR_H
 /** Set extended attributes */
-int my_setxattr(const char *path, const char *name, const char *value, size_t size, int flags)
-{
-}
+int my_setxattr(const char *path, const char *name, const char *value, size_t size, int flags);
 
 /** Get extended attributes */
-int my_getxattr(const char *path, const char *name, char *value, size_t size)
-{
-}
+int my_getxattr(const char *path, const char *name, char *value, size_t size);
 
 /** List extended attributes */
-int my_listxattr(const char *path, char *list, size_t size)
-{
-}
+int my_listxattr(const char *path, char *list, size_t size);
 
 /** Remove extended attributes */
-int my_removexattr(const char *path, const char *name)
-{
-}
+int my_removexattr(const char *path, const char *name);
 #endif
 
 /** Open directory
@@ -303,9 +251,7 @@ int my_removexattr(const char *path, const char *name)
  *
  * Introduced in version 2.3
  */
-int my_opendir(const char *path, struct fuse_file_info *fi)
-{
-}
+int my_opendir(const char *path, struct fuse_file_info *fi);
 
 /** Read directory
  *
@@ -329,17 +275,13 @@ int my_opendir(const char *path, struct fuse_file_info *fi)
  * Introduced in version 2.3
  */
 int my_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset,
-	       struct fuse_file_info *fi)
-{
-}
+	       struct fuse_file_info *fi);
 
 /** Release directory
  *
  * Introduced in version 2.3
  */
-int my_releasedir(const char *path, struct fuse_file_info *fi)
-{
-}
+int my_releasedir(const char *path, struct fuse_file_info *fi);
 
 /** Synchronize directory contents
  *
@@ -350,9 +292,7 @@ int my_releasedir(const char *path, struct fuse_file_info *fi)
  */
 // when exactly is this called?  when a user calls fsync and it
 // happens to be a directory? ???
-int my_fsyncdir(const char *path, int datasync, struct fuse_file_info *fi)
-{
-}
+int my_fsyncdir(const char *path, int datasync, struct fuse_file_info *fi);
 
 /**
  * Initialize filesystem
@@ -371,9 +311,7 @@ int my_fsyncdir(const char *path, int datasync, struct fuse_file_info *fi)
 // parameter coming in here, or else the fact should be documented
 // (and this might as well return void, as it did in older versions of
 // FUSE).
-void *my_init(struct fuse_conn_info *conn)
-{
-}
+void *my_init(struct fuse_conn_info *conn);
 
 /**
  * Clean up filesystem
@@ -382,9 +320,7 @@ void *my_init(struct fuse_conn_info *conn)
  *
  * Introduced in version 2.3
  */
-void my_destroy(void *userdata)
-{
-}
+void my_destroy(void *userdata);
 
 /**
  * Check file access permissions
@@ -397,9 +333,7 @@ void my_destroy(void *userdata)
  *
  * Introduced in version 2.5
  */
-int my_access(const char *path, int mask)
-{
-}
+int my_access(const char *path, int mask);
 
 /**
  * Create and open a file
@@ -413,9 +347,7 @@ int my_access(const char *path, int mask)
  *
  * Introduced in version 2.5
  */
-int my_create(const char *path, mode_t mode, struct fuse_file_info *fi)
-{
-}
+int my_create(const char *path, mode_t mode, struct fuse_file_info *fi);
 
 /**
  * Change the size of an open file
@@ -429,9 +361,7 @@ int my_create(const char *path, mode_t mode, struct fuse_file_info *fi)
  *
  * Introduced in version 2.5
  */
-int my_ftruncate(const char *path, off_t offset, struct fuse_file_info *fi)
-{
-}
+int my_ftruncate(const char *path, off_t offset, struct fuse_file_info *fi);
 
 /**
  * Get attributes from an open file
@@ -445,9 +375,7 @@ int my_ftruncate(const char *path, off_t offset, struct fuse_file_info *fi)
  *
  * Introduced in version 2.5
  */
-int my_fgetattr(const char *path, struct stat *statbuf, struct fuse_file_info *fi)
-{
-}
+int my_fgetattr(const char *path, struct stat *statbuf, struct fuse_file_info *fi);
 
 struct fuse_operations my_oper = {
   .getattr = my_getattr,
@@ -493,22 +421,17 @@ struct fuse_operations my_oper = {
   .fgetattr = my_fgetattr
 };
 
-void my_usage()
-{
-    fprintf(stderr, "usage:  myfs [FUSE and mount options] rootDir mountPoint\n");
-    abort();
-}
+void my_usage();
 
 int main(int argc, char *argv[])
 {
-/*
     int fuse_stat;
-    struct my_state *my_data;
+    //struct my_state *my_data;
 
-    // myfs doesn't do any access checking on its own (the comment
+    // bbfs doesn't do any access checking on its own (the comment
     // blocks in fuse.h mention some of the functions that need
     // accesses checked -- but note there are other functions, like
-    // chown(), that also need checking!).  Since running myfs as root
+    // chown(), that also need checking!).  Since running bbfs as root
     // will therefore open Metrodome-sized holes in the system
     // security, we'll check if root is trying to mount the filesystem
     // and refuse if it is.  The somewhat smaller hole of an ordinary
@@ -548,5 +471,5 @@ int main(int argc, char *argv[])
     fprintf(stderr, "fuse_main returned %d\n", fuse_stat);
     
     return fuse_stat;
-*/
 }
+
