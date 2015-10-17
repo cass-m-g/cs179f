@@ -1,0 +1,5 @@
+*.swp
+src/myfs
+src/bbfs
+src/rootdir*
+src/mountdir*
