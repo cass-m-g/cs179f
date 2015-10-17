@@ -21,27 +21,7 @@
 #include <sys/xattr.h>
 #endif
 
-// Report errors to logfile and give -errno to caller
-static int my_error(char *str)
-{
-}
 
-// Check whether the given user is permitted to perform the given operation on the given 
-
-//  All the paths I see are relative to the root of the mounted
-//  filesystem.  In order to get to the underlying filesystem, I need to
-//  have the mountpoint.  I'll save it away early on in main(), and then
-//  whenever I need a path for something I'll call this to construct
-//  it.
-static void my_fullpath(char fpath[PATH_MAX], const char *path)
-{
-}
-
-///////////////////////////////////////////////////////////
-//
-// Prototypes for all these functions, and the C-style comments,
-// come indirectly from /usr/include/fuse.h
-//
 /** Get file attributes.
  *
  * Similar to stat().  The 'st_dev' and 'st_blksize' fields are
@@ -60,20 +40,15 @@ int my_getattr(const char *path, struct stat *statbuf)
  * buffer, it should be truncated.  The return value should be 0
  * for success.
  */
-// Note the system readlink() will truncate and lose the terminating
-// null.  So, the size passed to to the system readlink() must be one
-// less than the size passed to my_readlink()
-// my_readlink() code by Bernardo F Costa (thanks!)
 int my_readlink(const char *path, char *link, size_t size)
 {
 }
 
 /** Create a file node
  *
- * There is no create() operation, mknod() will be called for
+ * If there is no create() operation, mknod() will be called for
  * creation of all non-directory, non-symlink nodes.
  */
-// shouldn't that comment be "if" there is no.... ?
 int my_mknod(const char *path, mode_t mode, dev_t dev)
 {
 }
@@ -94,16 +69,11 @@ int my_rmdir(const char *path)
 }
 
 /** Create a symbolic link */
-// The parameters here are a little bit confusing, but do correspond
-// to the symlink() system call.  The 'path' is where the link points,
-// while the 'link' is the link itself.  So we need to leave the path
-// unaltered, but insert the link into the mounted directory.
 int my_symlink(const char *path, const char *link)
 {
 }
 
 /** Rename a file */
-// both path and newpath are fs-relative
 int my_rename(const char *path, const char *newpath)
 {
 }
@@ -129,7 +99,6 @@ int my_truncate(const char *path, off_t newsize)
 }
 
 /** Change the access and/or modification times of a file */
-/* note -- I'll want to change this as soon as 2.6 is in debian testing */
 int my_utime(const char *path, struct utimbuf *ubuf)
 {
 }
@@ -141,8 +110,6 @@ int my_utime(const char *path, struct utimbuf *ubuf)
  * is permitted for the given flags.  Optionally open may also
  * return an arbitrary filehandle in the fuse_file_info structure,
  * which will be passed to all file operations.
- *
- * Changed in version 2.2
  */
 int my_open(const char *path, struct fuse_file_info *fi)
 {
@@ -156,14 +123,7 @@ int my_open(const char *path, struct fuse_file_info *fi)
  * 'direct_io' mount option is specified, in which case the return
  * value of the read system call will reflect the return value of
  * this operation.
- *
- * Changed in version 2.2
  */
-// I don't fully understand the documentation above -- it doesn't
-// match the documentation for the read() system call which says it
-// can return with anything up to the amount of data requested. nor
-// with the fusexmp code which returns the amount of data also
-// returned by read.
 int my_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
 {
 }
@@ -173,11 +133,7 @@ int my_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_
  * Write should return exactly the number of bytes requested
  * except on error.  An exception to this is when the 'direct_io'
  * mount option is specified (see read operation).
- *
- * Changed in version 2.2
  */
-// As  with read(), the documentation above is inconsistent with the
-// documentation for the write() system call.
 int my_write(const char *path, const char *buf, size_t size, off_t offset,
 	     struct fuse_file_info *fi)
 {
@@ -186,9 +142,6 @@ int my_write(const char *path, const char *buf, size_t size, off_t offset,
 /** Get file system statistics
  *
  * The 'f_frsize', 'f_favail', 'f_fsid' and 'f_flag' fields are ignored
- *
- * Replaced 'struct statfs' parameter with 'struct statvfs' in
- * version 2.5
  */
 int my_statfs(const char *path, struct statvfs *statv)
 {
@@ -214,8 +167,6 @@ int my_statfs(const char *path, struct statvfs *statv)
  *
  * Filesystems shouldn't assume that flush will always be called
  * after some writes, or that if will be called at all.
- *
- * Changed in version 2.2
  */
 int my_flush(const char *path, struct fuse_file_info *fi)
 {
@@ -276,8 +227,6 @@ int my_removexattr(const char *path, const char *name)
  *
  * This method should check if the open operation is permitted for
  * this  directory
- *
- * Introduced in version 2.3
  */
 int my_opendir(const char *path, struct fuse_file_info *fi)
 {
@@ -301,18 +250,13 @@ int my_opendir(const char *path, struct fuse_file_info *fi)
  * passes non-zero offset to the filler function.  When the buffer
  * is full (or an error happens) the filler function will return
  * '1'.
- *
- * Introduced in version 2.3
  */
 int my_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset,
 	       struct fuse_file_info *fi)
 {
 }
 
-/** Release directory
- *
- * Introduced in version 2.3
- */
+/** Release directory */
 int my_releasedir(const char *path, struct fuse_file_info *fi)
 {
 }
@@ -321,11 +265,7 @@ int my_releasedir(const char *path, struct fuse_file_info *fi)
  *
  * If the datasync parameter is non-zero, then only the user data
  * should be flushed, not the meta data
- *
- * Introduced in version 2.3
  */
-// when exactly is this called?  when a user calls fsync and it
-// happens to be a directory? ???
 int my_fsyncdir(const char *path, int datasync, struct fuse_file_info *fi)
 {
 }
@@ -336,17 +276,7 @@ int my_fsyncdir(const char *path, int datasync, struct fuse_file_info *fi)
  * The return value will passed in the private_data field of
  * fuse_context to all file operations and as a parameter to the
  * destroy() method.
- *
- * Introduced in version 2.3
- * Changed in version 2.6
  */
-// Undocumented but extraordinarily useful fact:  the fuse_context is
-// set up before this function is called, and
-// fuse_get_context()->private_data returns the user_data passed to
-// fuse_main().  Really seems like either it should be a third
-// parameter coming in here, or else the fact should be documented
-// (and this might as well return void, as it did in older versions of
-// FUSE).
 void *my_init(struct fuse_conn_info *conn)
 {
 }
@@ -355,8 +285,6 @@ void *my_init(struct fuse_conn_info *conn)
  * Clean up filesystem
  *
  * Called on filesystem exit.
- *
- * Introduced in version 2.3
  */
 void my_destroy(void *userdata)
 {
@@ -368,10 +296,6 @@ void my_destroy(void *userdata)
  * This will be called for the access() system call.  If the
  * 'default_permissions' mount option is given, this method is not
  * called.
- *
- * This method is not called under Linux kernel versions 2.4.x
- *
- * Introduced in version 2.5
  */
 int my_access(const char *path, int mask)
 {
@@ -386,8 +310,6 @@ int my_access(const char *path, int mask)
  * If this method is not implemented or under Linux kernel
  * versions earlier than 2.6.15, the mknod() and open() methods
  * will be called instead.
- *
- * Introduced in version 2.5
  */
 int my_create(const char *path, mode_t mode, struct fuse_file_info *fi)
 {
@@ -402,8 +324,6 @@ int my_create(const char *path, mode_t mode, struct fuse_file_info *fi)
  * If this method is not implemented or under Linux kernel
  * versions earlier than 2.6.15, the truncate() method will be
  * called instead.
- *
- * Introduced in version 2.5
  */
 int my_ftruncate(const char *path, off_t offset, struct fuse_file_info *fi)
 {
@@ -418,8 +338,6 @@ int my_ftruncate(const char *path, off_t offset, struct fuse_file_info *fi)
  * Currently this is only called after the create() method if that
  * is implemented (see above).  Later it may be called for
  * invocations of fstat() too.
- *
- * Introduced in version 2.5
  */
 int my_fgetattr(const char *path, struct stat *statbuf, struct fuse_file_info *fi)
 {
@@ -428,7 +346,6 @@ int my_fgetattr(const char *path, struct stat *statbuf, struct fuse_file_info *f
 struct fuse_operations prefix_oper = {
   .getattr = my_getattr,
   .readlink = my_readlink,
-  // no .getdir -- that's deprecated
   .getdir = NULL,
   .mknod = my_mknod,
   .mkdir = my_mkdir,
@@ -444,7 +361,6 @@ struct fuse_operations prefix_oper = {
   .open = my_open,
   .read = my_read,
   .write = my_write,
-  /** Just a placeholder, don't set */ // huh???
   .statfs = my_statfs,
   .flush = my_flush,
   .release = my_release,
