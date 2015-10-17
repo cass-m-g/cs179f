@@ -19,6 +19,9 @@
 #include <limits.h>
 #include <stdio.h>
 
-#define MY_DATA ((struct my_state *) fuse_get_context()->private_data)
+#define STATIC_DATA ((struct file_state *) fuse_get_context()->private_data)
+struct file_state{
+    char *rootdir;
+};
 
 #endif

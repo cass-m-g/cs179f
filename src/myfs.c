@@ -21,6 +21,11 @@
 #include <sys/xattr.h>
 #endif
 
+static void get_path(char fpath[PATH_MAX], const char *path)
+{
+    strcpy(fpath, STATIC_DATA->rootdir);
+    strncat(fpath, path, PATH_MAX);
+}
 
 /** Get file attributes.
  *
@@ -30,6 +35,21 @@
  */
 int my_getattr(const char *path, struct stat *statbuf)
 {
+    statbuf->st_dev=0;     /* ID of device containing file */
+    statbuf->st_ino=0;     /* inode number */
+    statbuf->st_mode=040777;    /* protection */
+    statbuf->st_nlink=0;   /* number of hard links */
+    statbuf->st_uid=0;     /* user ID of owner */
+    statbuf->st_gid=0;     /* group ID of owner */
+    statbuf->st_rdev=0;    /* device ID (if special file) */
+    statbuf->st_size=0;    /* total size, in bytes */
+    statbuf->st_blksize=0; /* blocksize for file system I/O */
+    statbuf->st_blocks=0;  /* number of 512B blocks allocated */
+    statbuf->st_atime=0;   /* time of last access */
+    statbuf->st_mtime=0;   /* time of last modification */
+    statbuf->st_ctime=0;   /* time of last status change */
+
+    return 0;
 }
 
 /** Read the target of a symbolic link
@@ -279,6 +299,7 @@ int my_fsyncdir(const char *path, int datasync, struct fuse_file_info *fi)
  */
 void *my_init(struct fuse_conn_info *conn)
 {
+    return STATIC_DATA;
 }
 
 /**
@@ -385,32 +406,30 @@ struct fuse_operations prefix_oper = {
   .fgetattr = my_fgetattr
 };
 
-void my_usage()
-{
-    fprintf(stderr, "usage:  myfs [Root Directory] [Mount Point]\n");
-    abort();
-}
-
-struct file_state{
-    FILE *logfile;
-    char *rootdir;
-};
 
 int main(int argc, char *argv[])
 {
-    //Check to see there's the right number of arguments
+    umask(0);
+
+    // Check to see there's the right number of arguments
     if (argc != 3)
-	my_usage();
+    {
+        fprintf(stderr, "usage:  myfs [Root Directory] [Mount Point]\n");
+        return -1;        
+    }
 
-    struct file_state *data;
-    data = malloc(sizeof(struct file_state));
+    // Create a struct for data that we need to keep.
+    // We can access this any time via STATIC_DATA
+    struct file_state *static_data;
+    static_data = malloc(sizeof(struct file_state));
 
-    data->rootdir = realpath(argv[argc-2], NULL);
+    // Keep root directory path as static data
+    static_data->rootdir = realpath(argv[argc-2], NULL);
+
+    // Remove root directory path from arguments
     argv[argc-2] = argv[argc-1];
     argv[argc-1] = NULL;
     argc--;
 
-    umask(0);
-    return fuse_main(argc, argv, &prefix_oper, NULL);
+    return fuse_main(argc, argv, &prefix_oper, static_data);
 }
-
