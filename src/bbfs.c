@@ -24,7 +24,7 @@
   gcc -Wall `pkg-config fuse --cflags --libs` -o bbfs bbfs.c
 */
 
-#include "params.h"
+#include "bbparams.h"
 
 #include <ctype.h>
 #include <dirent.h>

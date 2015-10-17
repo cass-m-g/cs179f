@@ -2,7 +2,7 @@
   CS179f File System Project
 */
 
-#include "params.h"
+#include "myparams.h"
 
 #include <ctype.h>
 #include <dirent.h>
