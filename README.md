@@ -1,4 +1,4 @@
-# cs179f
+# CS 179f
 
 
 ### Contributors:
@@ -10,3 +10,22 @@
 | Itsuki David Fukada | (949) 413-5164 | ifuka001@ucr.edu |
 | Christopher Hernandez | (818) 428-0533 | chern030@ucr.edu |
 | Kevin Chan | (510) 648-5205 | kchan039@ucr.edu|
+
+### Synopsis:
+
+We are creating a simple file system called myfs for a CS 179f project.
+
+### Running the file:
+
+```
+$ cd src
+$ make
+```
+
+### Overview:
+
+Running make will compile `myfs.c`.
+
+It will create a folder `rootDir` and `mountDir`.
+
+It will then mount `rootDir` to `mountDir` using the commands written in `myfs.c`

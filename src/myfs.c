@@ -1,27 +1,5 @@
 /*
-  Big Brother File System
-  Copyright (C) 2012 Joseph J. Pfeiffer, Jr., Ph.D. <pfeiffer@cs.nmsu.edu>
-
-  This program can be distributed under the terms of the GNU GPLv3.
-  See the file COPYING.
-
-  This code is derived from function prototypes found /usr/include/fuse/fuse.h
-  Copyright (C) 2001-2007  Miklos Szeredi <miklos@szeredi.hu>
-  His code is licensed under the LGPLv2.
-  A copy of that code is included in the file fuse.h
-  
-  The point of this FUSE filesystem is to provide an introduction to
-  FUSE.  It was my first FUSE filesystem as I got to know the
-  software; hopefully, the comments in this code will help people who
-  follow later to get a gentler introduction.
-
-  This might be called a no-op filesystem:  it doesn't impose
-  filesystem semantics on top of any other existing structure.  It
-  simply reports the requests that come in, and passes them to an
-  underlying filesystem.  The information is saved in a logfile named
-  myfs.log, in the directory from which you run myfs.
-
-  gcc -Wall `pkg-config fuse --cflags --libs` -o myfs myfs.c
+  CS179f File System Project
 */
 
 #include "params.h"
@@ -42,8 +20,6 @@
 #ifdef HAVE_SYS_XATTR_H
 #include <sys/xattr.h>
 #endif
-
-#include "log.h"
 
 // Report errors to logfile and give -errno to caller
 static int my_error(char *str)
@@ -449,7 +425,7 @@ int my_fgetattr(const char *path, struct stat *statbuf, struct fuse_file_info *f
 {
 }
 
-struct fuse_operations my_oper = {
+struct fuse_operations prefix_oper = {
   .getattr = my_getattr,
   .readlink = my_readlink,
   // no .getdir -- that's deprecated
@@ -495,58 +471,30 @@ struct fuse_operations my_oper = {
 
 void my_usage()
 {
-    fprintf(stderr, "usage:  myfs [FUSE and mount options] rootDir mountPoint\n");
+    fprintf(stderr, "usage:  myfs [Root Directory] [Mount Point]\n");
     abort();
 }
 
+struct file_state{
+    FILE *logfile;
+    char *rootdir;
+};
+
 int main(int argc, char *argv[])
 {
-/*
-    int fuse_stat;
-    struct my_state *my_data;
-
-    // myfs doesn't do any access checking on its own (the comment
-    // blocks in fuse.h mention some of the functions that need
-    // accesses checked -- but note there are other functions, like
-    // chown(), that also need checking!).  Since running myfs as root
-    // will therefore open Metrodome-sized holes in the system
-    // security, we'll check if root is trying to mount the filesystem
-    // and refuse if it is.  The somewhat smaller hole of an ordinary
-    // user doing it with the allow_other flag is still there because
-    // I don't want to parse the options string.
-    if ((getuid() == 0) || (geteuid() == 0)) {
-	fprintf(stderr, "Running BBFS as root opens unnacceptable security holes\n");
-	return 1;
-    }
-    
-    // Perform some sanity checking on the command line:  make sure
-    // there are enough arguments, and that neither of the last two
-    // start with a hyphen (this will break if you actually have a
-    // rootpoint or mountpoint whose name starts with a hyphen, but so
-    // will a zillion other programs)
-    if ((argc < 3) || (argv[argc-2][0] == '-') || (argv[argc-1][0] == '-'))
+    //Check to see there's the right number of arguments
+    if (argc != 3)
 	my_usage();
 
-    my_data = malloc(sizeof(struct my_state));
-    if (my_data == NULL) {
-	perror("main calloc");
-	abort();
-    }
+    struct file_state *data;
+    data = malloc(sizeof(struct file_state));
 
-    // Pull the rootdir out of the argument list and save it in my
-    // internal data
-    my_data->rootdir = realpath(argv[argc-2], NULL);
+    data->rootdir = realpath(argv[argc-2], NULL);
     argv[argc-2] = argv[argc-1];
     argv[argc-1] = NULL;
     argc--;
-    
-    my_data->logfile = log_open();
-    
-    // turn over control to fuse
-    fprintf(stderr, "about to call fuse_main\n");
-    fuse_stat = fuse_main(argc, argv, &my_oper, my_data);
-    fprintf(stderr, "fuse_main returned %d\n", fuse_stat);
-    
-    return fuse_stat;
-*/
+
+    umask(0);
+    return fuse_main(argc, argv, &prefix_oper, NULL);
 }
+
