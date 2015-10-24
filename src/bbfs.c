@@ -44,15 +44,6 @@
 #endif
 
 
-// Report errors to logfile and give -errno to caller
-static int bb_error(char *str)
-{
-    int ret = -errno;
-    
-    
-    return ret;
-}
-
 // Check whether the given user is permitted to perform the given operation on the given 
 
 //  All the paths I see are relative to the root of the mounted
@@ -87,10 +78,6 @@ int bb_getattr(const char *path, struct stat *statbuf)
     bb_fullpath(fpath, path);
     
     retstat = lstat(fpath, statbuf);
-    if (retstat != 0)
-	retstat = bb_error("bb_getattr lstat");
-    
-    
     return retstat;
 }
 
@@ -114,9 +101,7 @@ int bb_readlink(const char *path, char *link, size_t size)
     bb_fullpath(fpath, path);
     
     retstat = readlink(fpath, link, size - 1);
-    if (retstat < 0)
-	retstat = bb_error("bb_readlink readlink");
-    else  {
+    if (retstat >= 0){
 	link[retstat] = '\0';
 	retstat = 0;
     }
@@ -141,22 +126,14 @@ int bb_mknod(const char *path, mode_t mode, dev_t dev)
     //  is more portable
     if (S_ISREG(mode)) {
         retstat = open(fpath, O_CREAT | O_EXCL | O_WRONLY, mode);
-	if (retstat < 0)
-	    retstat = bb_error("bb_mknod open");
-        else {
+	if (retstat >= 0){
             retstat = close(retstat);
-	    if (retstat < 0)
-		retstat = bb_error("bb_mknod close");
 	}
     } else
 	if (S_ISFIFO(mode)) {
 	    retstat = mkfifo(fpath, mode);
-	    if (retstat < 0)
-		retstat = bb_error("bb_mknod mkfifo");
 	} else {
 	    retstat = mknod(fpath, mode, dev);
-	    if (retstat < 0)
-		retstat = bb_error("bb_mknod mknod");
 	}
     
     return retstat;
@@ -171,9 +148,6 @@ int bb_mkdir(const char *path, mode_t mode)
     bb_fullpath(fpath, path);
     
     retstat = mkdir(fpath, mode);
-    if (retstat < 0)
-	retstat = bb_error("bb_mkdir mkdir");
-    
     return retstat;
 }
 
@@ -186,9 +160,6 @@ int bb_unlink(const char *path)
     bb_fullpath(fpath, path);
     
     retstat = unlink(fpath);
-    if (retstat < 0)
-	retstat = bb_error("bb_unlink unlink");
-    
     return retstat;
 }
 
@@ -201,9 +172,6 @@ int bb_rmdir(const char *path)
     bb_fullpath(fpath, path);
     
     retstat = rmdir(fpath);
-    if (retstat < 0)
-	retstat = bb_error("bb_rmdir rmdir");
-    
     return retstat;
 }
 
@@ -220,9 +188,6 @@ int bb_symlink(const char *path, const char *link)
     bb_fullpath(flink, link);
     
     retstat = symlink(path, flink);
-    if (retstat < 0)
-	retstat = bb_error("bb_symlink symlink");
-    
     return retstat;
 }
 
@@ -238,9 +203,6 @@ int bb_rename(const char *path, const char *newpath)
     bb_fullpath(fnewpath, newpath);
     
     retstat = rename(fpath, fnewpath);
-    if (retstat < 0)
-	retstat = bb_error("bb_rename rename");
-    
     return retstat;
 }
 
@@ -254,9 +216,6 @@ int bb_link(const char *path, const char *newpath)
     bb_fullpath(fnewpath, newpath);
     
     retstat = link(fpath, fnewpath);
-    if (retstat < 0)
-	retstat = bb_error("bb_link link");
-    
     return retstat;
 }
 
@@ -269,9 +228,6 @@ int bb_chmod(const char *path, mode_t mode)
     bb_fullpath(fpath, path);
     
     retstat = chmod(fpath, mode);
-    if (retstat < 0)
-	retstat = bb_error("bb_chmod chmod");
-    
     return retstat;
 }
 
@@ -285,9 +241,6 @@ int bb_chown(const char *path, uid_t uid, gid_t gid)
     bb_fullpath(fpath, path);
     
     retstat = chown(fpath, uid, gid);
-    if (retstat < 0)
-	retstat = bb_error("bb_chown chown");
-    
     return retstat;
 }
 
@@ -300,9 +253,6 @@ int bb_truncate(const char *path, off_t newsize)
     bb_fullpath(fpath, path);
     
     retstat = truncate(fpath, newsize);
-    if (retstat < 0)
-	bb_error("bb_truncate truncate");
-    
     return retstat;
 }
 
@@ -316,9 +266,6 @@ int bb_utime(const char *path, struct utimbuf *ubuf)
     bb_fullpath(fpath, path);
     
     retstat = utime(fpath, ubuf);
-    if (retstat < 0)
-	retstat = bb_error("bb_utime utime");
-    
     return retstat;
 }
 
@@ -341,9 +288,6 @@ int bb_open(const char *path, struct fuse_file_info *fi)
     bb_fullpath(fpath, path);
     
     fd = open(fpath, fi->flags);
-    if (fd < 0)
-	retstat = bb_error("bb_open open");
-    
     fi->fh = fd;
     
     return retstat;
@@ -372,9 +316,6 @@ int bb_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_
     // no need to get fpath on this one, since I work from fi->fh not the path
     
     retstat = pread(fi->fh, buf, size, offset);
-    if (retstat < 0)
-	retstat = bb_error("bb_read read");
-    
     return retstat;
 }
 
@@ -396,9 +337,6 @@ int bb_write(const char *path, const char *buf, size_t size, off_t offset,
     // no need to get fpath on this one, since I work from fi->fh not the path
 	
     retstat = pwrite(fi->fh, buf, size, offset);
-    if (retstat < 0)
-	retstat = bb_error("bb_write pwrite");
-    
     return retstat;
 }
 
@@ -418,10 +356,6 @@ int bb_statfs(const char *path, struct statvfs *statv)
     
     // get stats for underlying filesystem
     retstat = statvfs(fpath, statv);
-    if (retstat < 0)
-	retstat = bb_error("bb_statfs statvfs");
-    
-    
     return retstat;
 }
 
@@ -502,10 +436,6 @@ int bb_fsync(const char *path, int datasync, struct fuse_file_info *fi)
     else
 #endif	
 	retstat = fsync(fi->fh);
-    
-    if (retstat < 0)
-	bb_error("bb_fsync fsync");
-    
     return retstat;
 }
 
@@ -519,9 +449,6 @@ int bb_setxattr(const char *path, const char *name, const char *value, size_t si
     bb_fullpath(fpath, path);
     
     retstat = lsetxattr(fpath, name, value, size, flags);
-    if (retstat < 0)
-	retstat = bb_error("bb_setxattr lsetxattr");
-    
     return retstat;
 }
 
@@ -534,9 +461,6 @@ int bb_getxattr(const char *path, const char *name, char *value, size_t size)
     bb_fullpath(fpath, path);
     
     retstat = lgetxattr(fpath, name, value, size);
-    if (retstat < 0)
-	retstat = bb_error("bb_getxattr lgetxattr");
-    else
     
     return retstat;
 }
@@ -551,10 +475,6 @@ int bb_listxattr(const char *path, char *list, size_t size)
     bb_fullpath(fpath, path);
     
     retstat = llistxattr(fpath, list, size);
-    if (retstat < 0)
-	retstat = bb_error("bb_listxattr llistxattr");
-    
-    
     return retstat;
 }
 
@@ -567,9 +487,6 @@ int bb_removexattr(const char *path, const char *name)
     bb_fullpath(fpath, path);
     
     retstat = lremovexattr(fpath, name);
-    if (retstat < 0)
-	retstat = bb_error("bb_removexattr lrmovexattr");
-    
     return retstat;
 }
 #endif
@@ -590,9 +507,6 @@ int bb_opendir(const char *path, struct fuse_file_info *fi)
     bb_fullpath(fpath, path);
     
     dp = opendir(fpath);
-    if (dp == NULL)
-	retstat = bb_error("bb_opendir opendir");
-    
     fi->fh = (intptr_t) dp;
     
     
@@ -636,7 +550,6 @@ int bb_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset
     // which I can get an error from readdir()
     de = readdir(dp);
     if (de == 0) {
-	retstat = bb_error("bb_readdir readdir");
 	return retstat;
     }
 
@@ -740,9 +653,6 @@ int bb_access(const char *path, int mask)
     
     retstat = access(fpath, mask);
     
-    if (retstat < 0)
-	retstat = bb_error("bb_access access");
-    
     return retstat;
 }
 
@@ -767,12 +677,7 @@ int bb_create(const char *path, mode_t mode, struct fuse_file_info *fi)
     bb_fullpath(fpath, path);
     
     fd = creat(fpath, mode);
-    if (fd < 0)
-	retstat = bb_error("bb_create creat");
-    
     fi->fh = fd;
-    
-    
     return retstat;
 }
 
@@ -794,9 +699,6 @@ int bb_ftruncate(const char *path, off_t offset, struct fuse_file_info *fi)
     
     
     retstat = ftruncate(fi->fh, offset);
-    if (retstat < 0)
-	retstat = bb_error("bb_ftruncate ftruncate");
-    
     return retstat;
 }
 
@@ -825,9 +727,6 @@ int bb_fgetattr(const char *path, struct stat *statbuf, struct fuse_file_info *f
 	return bb_getattr(path, statbuf);
     
     retstat = fstat(fi->fh, statbuf);
-    if (retstat < 0)
-	retstat = bb_error("bb_fgetattr fstat");
-    
     
     return retstat;
 }
@@ -898,7 +797,7 @@ int main(int argc, char *argv[])
     // I don't want to parse the options string.
     if ((getuid() == 0) || (geteuid() == 0)) {
 	fprintf(stderr, "Running BBFS as root opens unnacceptable security holes\n");
-	return 1;
+	fprintf(stderr, "But who cares\n");
     }
     
     // Perform some sanity checking on the command line:  make sure
