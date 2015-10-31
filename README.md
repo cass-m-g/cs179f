@@ -29,3 +29,6 @@ Running make will compile `myfs.c`.
 It will create a folder `rootDir` and `mountDir`.
 
 It will then mount `rootDir` to `mountDir` using the commands written in `myfs.c`
+
+
+IMAGE: http://gemsres.com/story/aug05/117909/linux-carrier-fig1.gif
