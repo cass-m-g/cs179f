@@ -1,31 +1,39 @@
-all: testmyfs
 
-test: testmyfs
+CFLAGS = -DFUSE_USE_VERSION=26 `pkg-config fuse --cflags`
+LINKFLAGS = `pkg-config fuse --libs`
 
-myfs:
-	@gcc -g `pkg-config fuse --cflags --libs` myfs.c -o myfs	
+all: test
 
-testmyfs: cleandir cleanmyfs myfs mkdirs
-	@./myfs rootdir/ mountdir/
+clean: cleandir
+	@rm -rf bin obj
+	@cat test.txt
+	@> test.txt
 
-bbfs: 
-	@gcc -g `pkg-config fuse --cflags --libs` bbfs.c -o bbfs	
-	
-testbbfs: cleandir cleanbbfs bbfs mkdirs
-	@./bbfs rootdir/ mountdir/
+bin: 
+	@mkdir -p bin
+
+bin/myfs: bin obj/myfs.o obj/wrap.o obj/main.o
+	@g++ -g $(LINKFLAGS) -o bin/myfs obj/*
+
+obj:
+	@mkdir -p obj
+
+obj/myfs.o: obj myfs.cc myfs.h
+	@g++ -g $(CFLAGS) -c myfs.cc -o obj/myfs.o
+
+obj/main.o: obj main.c wrap.h
+	@gcc -g $(CFLAGS) -c main.c -o obj/main.o
+
+obj/wrap.o: obj wrap.cc wrap.h myfs.h
+	@g++ -g $(CFLAGS) -c wrap.cc -o obj/wrap.o
+
+test: clean mkdirs bin/myfs
+	@bin/myfs rootdir/ mountdir/
 
 mkdirs: 
 	@mkdir -p mountdir
 	@mkdir -p rootdir
 	@echo "This file was created and placed in the root directory" > rootdir/file.txt
-
-clean: cleandir cleanmyfs cleanbbfs
-
-cleanmyfs:
-	@rm -f myfs
-
-cleanbbfs:
-	@rm -f bbfs
 
 cleandir:
 	@fusermount -u mountdir/ 2> /dev/null || true
