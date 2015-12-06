@@ -7,7 +7,7 @@
 
 using namespace std;
 
-const bool DEBUG = true;
+const bool DEBUG = false;
 time_t initTime;
 FILE * pFile;
 void log(const char * s, ...)
