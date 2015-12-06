@@ -249,6 +249,12 @@ int myfs::Write(const char *path, const char *buf, size_t size, off_t offset, st
 
 int myfs::Readlink(const char *path, char *link, size_t size) {
 	log("readlink \"%s\"\n", path);
+
+	File *f = getFile(split(path,"/"));
+
+	memset(link, '\0', size);
+	strncpy(link, f->data.c_str(), size);
+
 	return 0;
 }
 
@@ -300,8 +306,28 @@ int myfs::Unlink(const char *path) {
 	return 0;
 }
 
-int myfs::Symlink(const char *path, const char *link) {
-	log("symlink \"%s\"\n", path);
+int myfs::Symlink(const char *link, const char *path) {
+	log("symlink \"%s, %s\"\n", path, link);
+
+	vector<string> p = split(path,"/");
+	string newName = p.back();
+	p.pop_back();
+
+
+	File *f = getFile(p);
+
+	File *linkFile = getFile(split(link,"/"));
+
+	File *newFile = new File;
+	struct stat st = linkFile->metadata;
+
+	st.st_mode = 0120000 | (linkFile->metadata.st_mode & 0777);
+
+	newFile->metadata = st;
+
+	newFile->data = link;
+	
+	f->dirents.insert(pair<string, File*>(newName,newFile));
 	return 0;
 }
 
