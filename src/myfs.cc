@@ -105,7 +105,7 @@ void myfs::setRootDir(const char *path) {
 }
 
 int myfs::Getattr(const char *path, struct stat *statbuf) {
-	log("getattr \"%s\"\n",path);
+	//log("getattr \"%s\"\n",path);
 	File *f = getFile(split(path,"/"));
 	if (f == NULL)
 	{
@@ -116,12 +116,12 @@ int myfs::Getattr(const char *path, struct stat *statbuf) {
 }
 
 int myfs::Opendir(const char *path, struct fuse_file_info *fileInfo) {
-	log("opendir \"%s\"\n",path);
+	//log("opendir \"%s\"\n",path);
 	return 0;
 }
 
 int myfs::Readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fileInfo) {
-	log("readdir \"%s\"\n",path);
+	//log("readdir \"%s\"\n",path);
 	filler(buf, ".", NULL, 0);
 	filler(buf, "..", NULL, 0);
 	File *f = getFile(split(path,"/"));
@@ -135,7 +135,7 @@ int myfs::Readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t off
 }
 
 int myfs::Mkdir(const char *path, mode_t mode) {
-	log("mkdir \"%s, %o\"\n", path, mode);
+	//log("mkdir \"%s, %o\"\n", path, mode);
 
 	vector<string> p = split(path,"/");
 	string newName = p.back();
@@ -167,7 +167,7 @@ int myfs::Mkdir(const char *path, mode_t mode) {
 }
 
 int myfs::Rmdir(const char *path) {
-	log("rmdir \"%s\"\n", path);
+	//log("rmdir \"%s\"\n", path);
 
 	vector<string> p = split(path,"/");
 	File *f = getFile(p);
@@ -183,7 +183,7 @@ int myfs::Rmdir(const char *path) {
 }
 
 int myfs::Chmod(const char *path, mode_t mode) {
-	log("chmod \"%s\", \"%d\"\n", path, mode);
+	//log("chmod \"%s\", \"%d\"\n", path, mode);
 	File *f = getFile(split(path,"/"));
 	f->metadata.st_mode = mode;
 	f->metadata.st_ctime = time(0);
@@ -191,7 +191,7 @@ int myfs::Chmod(const char *path, mode_t mode) {
 }
 
 int myfs::Chown(const char *path, uid_t uid, gid_t gid) {
-	log("chown \"%s\", \"%d.%d\"\n", path, uid, gid);
+	//log("chown \"%s\", \"%d.%d\"\n", path, uid, gid);
 	File *f = getFile(split(path,"/"));
 	f->metadata.st_uid = uid;
 	f->metadata.st_gid = gid;
@@ -200,7 +200,7 @@ int myfs::Chown(const char *path, uid_t uid, gid_t gid) {
 }
 
 int myfs::Rename(const char *path, const char *newpath) {
-	log("rename \"%s to %s\"\n", path, newpath);
+	//log("rename \"%s to %s\"\n", path, newpath);
 
 	vector<string> p = split(path,"/");
 	File *oldFile = getFile(p);
@@ -220,39 +220,40 @@ int myfs::Rename(const char *path, const char *newpath) {
 }
 
 int myfs::Open(const char *path, struct fuse_file_info *fileInfo) {
-	log("open \"%s\"\n", path);
+	//log("open \"%s\"\n", path);
 	return 0;
 }
 
 int myfs::Read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) {
-	log("read \"%s, %d\"\n", path, size);
+	log("read \"%s, size %d\", offset %d\n", path, size, offset);
 	File *f = getFile(split(path,"/"));
 
 	memset(buf, '\0', size);
-	strcpy(buf, f->data.substr(offset, size).c_str());
+	strncpy(buf, f->data.substr(offset, size).c_str(), size);
 	log("buf: \"%s\"\n", buf);
-	if (f->data.substr(offset,size).length() < size)
-		return 0;
-	return size;
-	//return f->data.substr(offset,size).length();
+//	if (f->data.substr(offset,size).length() < size)
+//		return 0;
+//	return size;
+	return f->data.substr(offset,size).length();
 }
 
 int myfs::Write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) {
 	log("write \"%s, %d\"\n", path, size);
 
 	File *f = getFile(split(path,"/"));
-	f->data.insert(offset,buf, size);
+	f->data.replace(offset,size, buf);
 	log("buf: \"%s\"\n", buf);
+	f->metadata.st_size = offset + size;
 	return size;
 }
 
 int myfs::Readlink(const char *path, char *link, size_t size) {
-	log("readlink \"%s\"\n", path);
+	//log("readlink \"%s\"\n", path);
 	return 0;
 }
 
 int myfs::Mknod(const char *path, mode_t mode, dev_t dev) {
-	log("mknod \"%s\"\n", path);
+	//log("mknod \"%s\"\n", path);
 
 	vector<string> p = split(path,"/");
 	string newName = p.back();
@@ -284,27 +285,27 @@ int myfs::Mknod(const char *path, mode_t mode, dev_t dev) {
 }
 
 int myfs::Unlink(const char *path) {
-	log("unlink \"%s\"\n", path);
+	//log("unlink \"%s\"\n", path);
 	return 0;
 }
 
 int myfs::Symlink(const char *path, const char *link) {
-	log("symlink \"%s\"\n", path);
+	//log("symlink \"%s\"\n", path);
 	return 0;
 }
 
 int myfs::Link(const char *path, const char *newpath) {
-	log("link \"%s\"\n", path);
+	//log("link \"%s\"\n", path);
 	return 0;
 }
 
 int myfs::Truncate(const char *path, off_t newSize) {
-	log("truncate \"%s\"\n", path);
+	//log("truncate \"%s\"\n", path);
 	return 0;
 }
 
 int myfs::Utime(const char *path, struct utimbuf *ubuf) {
-	log("utime \"%s\"\n", path);
+	//log("utime \"%s\"\n", path);
 	
 	struct utimbuf t = {};
 	t.actime = time(0);
@@ -316,22 +317,22 @@ int myfs::Utime(const char *path, struct utimbuf *ubuf) {
 }
 
 int myfs::Statfs(const char *path, struct statvfs *statInfo) {
-	log("statfs \"%s\"\n", path);
+	//log("statfs \"%s\"\n", path);
 	return 0;
 }
 
 int myfs::Flush(const char *path, struct fuse_file_info *fileInfo) {
-	log("flush \"%s\"\n", path);
+	//log("flush \"%s\"\n", path);
 	return 0;
 }
 
 int myfs::Release(const char *path, struct fuse_file_info *fileInfo) {
-	log("release \"%s\"\n", path);
+	//log("release \"%s\"\n", path);
 	return 0;
 }
 
 int myfs::Fsync(const char *path, int datasync, struct fuse_file_info *fi) {
-	log("fsync \"%s\"\n", path);
+	//log("fsync \"%s\"\n", path);
 	return 0;
 }
 
@@ -352,22 +353,22 @@ int myfs::Removexattr(const char *path, const char *name) {
 }
 
 int myfs::Releasedir(const char *path, struct fuse_file_info *fileInfo) {
-	log("releasedir \"%s\"\n", path);
+	//log("releasedir \"%s\"\n", path);
 	return 0;
 }
 
 int myfs::Fsyncdir(const char *path, int datasync, struct fuse_file_info *fileInfo) {
-	log("fsyncdir \"%s\"\n", path);
+	//log("fsyncdir \"%s\"\n", path);
 	return 0;
 }
 
 int myfs::Init(struct fuse_conn_info *conn) {
 	initTime = time(0);
-	log("Initializing\n");
+	//log("Initializing\n");
 	return 0;
 }
 
 int myfs::Truncate(const char *path, off_t offset, struct fuse_file_info *fileInfo) {
-	log("truncate \"%s\"\n", path);
+	//log("truncate \"%s\"\n", path);
 	return 0;
 }
