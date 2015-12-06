@@ -232,12 +232,11 @@ int myfs::Rename(const char *path, const char *newpath) {
 	if(Access(np, R_OK))
 		return -EACCES;	
 
-	newPar->dirents.insert(pair<string, File*>(newName,oldFile));	
+	newPar->dirents[newName] = oldFile;	
 	oldPar->dirents.erase(oldName);	
 
 	return 0;
 }
-
 int myfs::Open(const char *path, struct fuse_file_info *fileInfo) {
 	log("open \"%s\"\n", path);
 	return 0;
