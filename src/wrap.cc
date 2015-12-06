@@ -88,6 +88,9 @@ int wrap_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offs
 int wrap_releasedir(const char *path, struct fuse_file_info *fileInfo) {
 	return myfs::Instance()->Releasedir(path, fileInfo);
 }
+int wrap_access(const char *path, int mask) {
+	return myfs::Instance()->Access(path, mask);
+}
 int wrap_fsyncdir(const char *path, int datasync, struct fuse_file_info *fileInfo) {
 	return myfs::Instance()->Fsyncdir(path, datasync, fileInfo);
 }

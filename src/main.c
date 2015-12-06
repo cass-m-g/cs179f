@@ -29,6 +29,7 @@ int main(int argc, char *argv[]) {
 	examplefs_oper.flush = wrap_flush;
 	examplefs_oper.release = wrap_release;
 	examplefs_oper.fsync = wrap_fsync;
+	examplefs_oper.access = wrap_access;
 	//examplefs_oper.setxattr = wrap_setxattr;
 	//examplefs_oper.getxattr = wrap_getxattr;
 	//examplefs_oper.listxattr = wrap_listxattr;
