@@ -12,7 +12,6 @@
 #include <stdio.h>
 #include <string>
 #include <unistd.h>
-#include <vector>
 #include <sys/types.h>
 #include <sys/xattr.h>
 
@@ -60,7 +59,6 @@ public:
 	int Releasedir(const char *path, struct fuse_file_info *fileInfo);
 	int Fsyncdir(const char *path, int datasync, struct fuse_file_info *fileInfo);
 	int Access(const char *path, int mask);
-	int Access(std::vector<std::string> p, int mask);
 	int Init(struct fuse_conn_info *conn);
 	int Truncate(const char *path, off_t offset, struct fuse_file_info *fileInfo);
 };

@@ -116,15 +116,14 @@ int myfs::Getattr(const char *path, struct stat *statbuf) {
 
 int myfs::Opendir(const char *path, struct fuse_file_info *fileInfo) {
 	log("opendir \"%s, %o\"\n",path, fileInfo->flags);
+	if(Access(path, R_OK))
+		return -EACCES;	
 	return 0;
 }
 
 int myfs::Readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fileInfo) {
 	log("readdir \"%s\"\n",path);
 
-	if(Access(path, R_OK))
-		return -EACCES;	
-	
 	File *f = getFile(split(path,"/"));
 	for (map<string, File*>::iterator it = f->dirents.begin(); it != f->dirents.end(); it++ ) {
 		filler(buf, it->first.c_str(), NULL, 0);
@@ -143,9 +142,6 @@ int myfs::Mkdir(const char *path, mode_t mode) {
 	vector<string> p = split(path,"/");
 	string newName = p.back();
 	p.pop_back();
-
-	if(Access(p, W_OK))
-		return -EACCES;	
 
 	File *f = getFile(p);
 
@@ -180,9 +176,6 @@ int myfs::Rmdir(const char *path) {
 	string fileName = p.back();
 	p.pop_back();
 
-	if(Access(p, R_OK))
-		return -EACCES;	
-
 	File *parent = getFile(p);
 	
 	parent->dirents.erase(fileName);
@@ -214,9 +207,6 @@ int myfs::Chown(const char *path, uid_t uid, gid_t gid) {
 
 int myfs::Rename(const char *path, const char *newpath) {
 	log("rename \"%s to %s\"\n", path, newpath);
-
-	if(Access(path, R_OK))
-		return -EACCES;	
 	
 	vector<string> p = split(path,"/");
 	File *oldFile = getFile(p);
@@ -229,24 +219,29 @@ int myfs::Rename(const char *path, const char *newpath) {
 	np.pop_back();
 	File *newPar = getFile(np);
 
-	if(Access(np, R_OK))
-		return -EACCES;	
-
-	newPar->dirents[newName] = oldFile;	
-	oldPar->dirents.erase(oldName);	
-
 	return 0;
 }
 int myfs::Open(const char *path, struct fuse_file_info *fileInfo) {
-	log("open \"%s\"\n", path);
+	log("open \"%s, %o\"\n",path, fileInfo->flags);
+	int flag = fileInfo->flags;
+	if ((flag & O_ACCMODE) == 0){
+		if(Access(path, R_OK))
+			return -EACCES;	
+	}
+	else if ((flag & O_WRONLY) != 0){
+		if (Access(path, W_OK))
+			return -EACCES;
+	}
+	else if ((flag & O_RDWR) != 0){
+		if (Access(path, W_OK | R_OK))
+			return -EACCES;
+	}
 	return 0;
 }
 
 int myfs::Read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) {
 	log("read \"%s, size %d\", offset %d\n", path, size, offset);
 	File *f = getFile(split(path,"/"));
-	if(Access(path, R_OK))
-		return -EACCES;	
 
 	memset(buf, '\0', size);
 	strncpy(buf, f->data.substr(offset, size).c_str(), size);
@@ -256,8 +251,6 @@ int myfs::Read(const char *path, char *buf, size_t size, off_t offset, struct fu
 
 int myfs::Write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) {
 	log("write \"%s, %d\"\n", path, size);
-	if(Access(path, W_OK))
-		return -EACCES;	
 
 	File *f = getFile(split(path,"/"));
 	f->data.replace(offset,size, buf);
@@ -269,9 +262,6 @@ int myfs::Write(const char *path, const char *buf, size_t size, off_t offset, st
 int myfs::Readlink(const char *path, char *link, size_t size) {
 	log("readlink \"%s\"\n", path);
 	
-	if(Access(path, R_OK))
-		return -EACCES;	
-
 	File *f = getFile(split(path,"/"));
 
 	memset(link, '\0', size);
@@ -287,9 +277,6 @@ int myfs::Mknod(const char *path, mode_t mode, dev_t dev) {
 	string newName = p.back();
 	p.pop_back();
 	
-	if(Access(p, W_OK))
-		return -EACCES;	
-
 	File *f = getFile(p);
 
 	File *newFile = new File;
@@ -318,9 +305,6 @@ int myfs::Mknod(const char *path, mode_t mode, dev_t dev) {
 int myfs::Unlink(const char *path) {
 	log("unlink \"%s\"\n", path);
 
-	if(Access(path, W_OK))
-		return -EACCES;	
-
 	vector<string> p = split(path,"/");
 	File *f = getFile(p);
 	string fileName = p.back();
@@ -340,9 +324,6 @@ int myfs::Symlink(const char *link, const char *path) {
 	vector<string> p = split(path,"/");
 	string newName = p.back();
 	p.pop_back();
-
-	if(Access(p, W_OK))
-		return -EACCES;	
 
 	File *f = getFile(p);
 
@@ -364,9 +345,6 @@ int myfs::Symlink(const char *link, const char *path) {
 int myfs::Link(const char *path, const char *newpath) {
 	log("link \"%s\"\n", path);
 	
-	if(Access(path, R_OK))
-		return -EACCES;	
-
 	vector<string> p = split(path,"/");
 	File *oldFile = getFile(p);
 	
@@ -375,9 +353,6 @@ int myfs::Link(const char *path, const char *newpath) {
 	string newName = np.back();
 	np.pop_back();
 	File *newPar = getFile(np);
-
-	if(Access(np, W_OK))
-		return -EACCES;	
 
 	newPar->dirents.insert(pair<string, File*>(newName,oldFile));	
 	oldFile->metadata.st_nlink++;
@@ -404,14 +379,7 @@ int myfs::Utime(const char *path, struct utimbuf *ubuf) {
 
 int myfs::Access(const char *path, int mask) {
 	log("access \"%s, %d\"\n", path, mask);
-	vector<string> p = split(path,"/");
-	return Access(p,mask);
-}
-
-int myfs::Access(vector<string> p, int mask) {
-	log("Checking Access \"%d\"\n", mask);
-
-	File * f = getFile(p);
+	File * f = getFile(split(path,"/"));
 	
 	if(mask == F_OK){
 		return f == NULL ? -1 : 0;
