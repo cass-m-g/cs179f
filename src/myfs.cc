@@ -463,7 +463,7 @@ int myfs::Fsyncdir(const char *path, int datasync, struct fuse_file_info *fileIn
 	return 0;
 }
 
-int myfs::Init(struct fuse_conn_info *conn) {
+void* myfs::Init(struct fuse_conn_info *conn) {
 	initTime = time(0);
 	log("Initializing\n");
 	return 0;

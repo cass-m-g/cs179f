@@ -50,7 +50,7 @@ int wrap_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offs
 int wrap_releasedir(const char *path, struct fuse_file_info *fileInfo);
 int wrap_fsyncdir(const char *path, int datasync, struct fuse_file_info *fileInfo);
 int wrap_access(const char *path, int mask);
-int wrap_init(struct fuse_conn_info *conn);
+void* wrap_init(struct fuse_conn_info *conn);
 
 #ifdef __cplusplus
 }

@@ -94,7 +94,7 @@ int wrap_access(const char *path, int mask) {
 int wrap_fsyncdir(const char *path, int datasync, struct fuse_file_info *fileInfo) {
 	return myfs::Instance()->Fsyncdir(path, datasync, fileInfo);
 }
-int wrap_init(struct fuse_conn_info *conn) {
-	return myfs::Instance()->Init(conn);
+void* wrap_init(struct fuse_conn_info *conn) {
+	myfs::Instance()->Init(conn);
 }
 
