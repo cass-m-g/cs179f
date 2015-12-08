@@ -7,7 +7,7 @@
 
 using namespace std;
 
-const bool DEBUG = true;
+const bool DEBUG = false;
 time_t initTime;
 FILE * pFile;
 void log(const char * s, ...)
@@ -27,7 +27,7 @@ myfs* myfs::_instance = NULL;
 struct File {
 	struct stat metadata;
 
-	string data;
+	vector<char> data;
 	map<string, File*> dirents;
 };
 
@@ -219,6 +219,9 @@ int myfs::Rename(const char *path, const char *newpath) {
 	np.pop_back();
 	File *newPar = getFile(np);
 
+	newPar->dirents[newName] = oldFile;	
+	oldPar->dirents.erase(oldName);	
+
 	return 0;
 }
 int myfs::Open(const char *path, struct fuse_file_info *fileInfo) {
@@ -244,17 +247,24 @@ int myfs::Read(const char *path, char *buf, size_t size, off_t offset, struct fu
 	File *f = getFile(split(path,"/"));
 
 	memset(buf, '\0', size);
-	strncpy(buf, f->data.substr(offset, size).c_str(), size);
+	size = size < f->data.size()-offset ? size : f->data.size()-offset;
+	
+	copy (f->data.begin() + offset, f->data.begin() + offset + size, buf);
 	log("buf: \"%s\"\n", buf);
-	return f->data.substr(offset,size).length();
+	return size;
 }
 
 int myfs::Write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fileInfo) {
 	log("write \"%s, %d\"\n", path, size);
+	log("buf: \"%s\"\n", buf);
 
 	File *f = getFile(split(path,"/"));
-	f->data.replace(offset,size, buf);
-	log("buf: \"%s\"\n", buf);
+
+	int toEnd = size < f->data.size()-offset ? size : f->data.size()-offset;
+
+	f->data.erase(f->data.begin()+offset, f->data.begin()+offset+toEnd);
+	f->data.insert(f->data.begin()+offset, buf, buf+size);
+
 	f->metadata.st_size = offset + size;
 	return size;
 }
@@ -265,7 +275,7 @@ int myfs::Readlink(const char *path, char *link, size_t size) {
 	File *f = getFile(split(path,"/"));
 
 	memset(link, '\0', size);
-	strncpy(link, f->data.c_str(), size);
+	strncpy(link, &f->data[0], size);
 
 	return 0;
 }
@@ -314,6 +324,9 @@ int myfs::Unlink(const char *path) {
 	
 	parent->dirents.erase(fileName);
 	f->metadata.st_nlink--;
+
+	if (f->metadata.st_nlink == 0)
+		delete f;
 	
 	return 0;
 }
@@ -336,7 +349,7 @@ int myfs::Symlink(const char *link, const char *path) {
 
 	newFile->metadata = st;
 
-	newFile->data = link;
+	newFile->data.assign(link, link + sizeof(link)/sizeof(char));
 	
 	f->dirents.insert(pair<string, File*>(newName,newFile));
 	return 0;
